@@ -22,3 +22,22 @@
 |   Crypto Layer    |
 | Argon2 + AES-GCM  |
 +-------------------+
+
+
+
+
+Vault Structure:
+{
+  "version": 1,
+  "salt": "...",
+  "verification": {
+    "nonce": "...",
+    "ciphertext": "..."
+  },
+  "entries": {
+    "github": {
+      "nonce": "...",
+      "ciphertext": "..."
+    }
+  }
+}
