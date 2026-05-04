@@ -16,6 +16,9 @@ pub enum Commands
         name: String,
     },
     List,
+    Get {
+        name: String,
+    },
     Delete
     {
       name: String,
