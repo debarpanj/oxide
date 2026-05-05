@@ -6,7 +6,6 @@ pub fn generate_totp_code(secret: String) -> Result<(String,u64),String>
 {
 
    let cleaned_str = secret.to_uppercase();
-   println!("cleaned_str: {}",&cleaned_str);
    let secret = Secret::Encoded(cleaned_str)
     .to_bytes()
     .map_err(|_|{"Invalid Base32 secret format"})?;

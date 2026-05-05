@@ -1,6 +1,8 @@
 use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
+#[command(name = "oxide")]
+#[command(about = "A secure CLI TOTP vault", long_about = None)]
 pub struct Cli
 {
   #[command(subcommand)]
@@ -18,6 +20,8 @@ pub enum Commands
     List,
     Get {
         name: String,
+        #[arg(short, long)]
+        clipboard: bool,
     },
     Delete
     {

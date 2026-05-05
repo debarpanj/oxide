@@ -8,6 +8,7 @@ use std::io::{BufReader,BufWriter};
 use std::collections::HashMap;
 use std::io::{self, Write};
 use crate::totp::generate_totp_code;
+use arboard;
 
 
 
@@ -113,6 +114,10 @@ pub fn add_entry(name: String) -> Result<(),std::io::Error>
       add_entry_to_map(&mut vault.entries, name, secret, key);
       store_vault(&vault).unwrap();
     }
+    else
+    {
+        println!("Wrong master password");
+    }
     Ok(())
 }
 
@@ -121,7 +126,14 @@ fn delete_entry_from_map(
     name: String
 )
 {
-   map.remove(&name);
+   if let Some(_) = map.remove(&name)
+   {
+      println!("Account {} deleted!!!",name);
+   }
+   else {
+      println!("Account {} does not exist!!!",name);
+   }
+
 }
 
 pub fn delete_entry(name: String) -> Result<(),std::io::Error>
@@ -131,10 +143,22 @@ pub fn delete_entry(name: String) -> Result<(),std::io::Error>
       delete_entry_from_map(&mut vault.entries, name);
       store_vault(&vault).unwrap();
     }
+    else
+    {
+        println!("Wrong master password");
+    }
     Ok(())
 }
 
-pub fn get_code(name: String) -> Result<(),std::io::Error>
+fn copy_to_clipboard(code: String) -> Result<(),String>
+{
+   let mut clipboard = arboard::Clipboard::new()
+    .map_err(|e|{format!("Failed to initialize clipboard: {}", e)})?;
+   clipboard.set_text(code).map_err(|e| format!("Failed to copy to clipboard: {}", e))?;
+  Ok(())
+}
+
+pub fn get_code(name: String, clipboard: bool) -> Result<(),std::io::Error>
 {
     if let Ok((vault,key)) = verify_password()
     {
@@ -145,13 +169,24 @@ pub fn get_code(name: String) -> Result<(),std::io::Error>
            {
               let secret = decrypt(&entry.ciphertext, key,&entry.nonce).unwrap();
               let (totp,time_left) = generate_totp_code(secret).unwrap();
-              println!("Your Secret OTP for account {} is: {} (Expires in {}s",name,totp,time_left);
+              if clipboard
+              {
+                copy_to_clipboard(totp).unwrap();
+                println!("Your Secret OTP for account {} is copied to your clipboard (Expires in {}s",name,time_left);
+              }
+              else {
+                println!("Your Secret OTP for account {} is: {} (Expires in {}s)",name,totp,time_left);
+              }
            }
            None =>
            {
               println!("Account {} does not exist!!!",name);
            }
         }
+    }
+    else
+    {
+        println!("Wrong master password");
     }
     Ok(())
 }

@@ -16,6 +16,6 @@ fn main() {
             let _ = util::get_list();
         }
         Commands::Delete {name} => {let _ = util::delete_entry(name);}
-        Commands::Get { name } => {let _ = util::get_code(name);}
+        Commands::Get { name,clipboard } => {let _ = util::get_code(name,clipboard);}
     }
 }

@@ -40,9 +40,8 @@ pub fn get_vault_file_path() -> PathBuf
 }
 
 
-pub fn init_vault()->bool
+pub fn init_vault()
 {
-    let mut status: bool = true;
     let vault_file_path = get_vault_file_path();
     let vault_directory_path = vault_file_path.parent()
         .expect("Cannot get parent directory!!!");
@@ -59,9 +58,9 @@ pub fn init_vault()->bool
         init_vault_file();
     }
     else {
-       status = false;
+       println!("Vault file already exists!!!");
+       println!("Cannot Init!!!");
     }
-    return status;
 }
 
 fn init_vault_file()
