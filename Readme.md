@@ -22,10 +22,19 @@ Oxide is intended to run anywhere Rust and its dependencies are available:
 - Linux
 - Windows
 
-The vault is stored in the user's home directory at `~/.oxide/vault.json`.
+The vault is stored in the user's home directory:
+
+- macOS/Linux: `~/.oxide/vault.json`
+- Windows: `%USERPROFILE%\.oxide\vault.json`
+
 Clipboard support depends on the host OS clipboard APIs.
 
 ## Installation
+
+Oxide requires Cargo, the Rust package manager, to build from source. If you do
+not already have it installed, install Rust and Cargo with
+[`rustup`](https://rustup.rs/) or see the official
+[Cargo installation guide](https://doc.rust-lang.org/cargo/getting-started/installation.html).
 
 Build Oxide from source with Cargo:
 
@@ -39,10 +48,16 @@ Run the compiled binary directly:
 ./target/release/oxide --help
 ```
 
-Optionally install it somewhere on your `PATH`:
+On Windows, run the compiled executable from PowerShell:
+
+```powershell
+.\target\release\oxide.exe --help
+```
+
+Optionally install it on your Cargo binary path:
 
 ```sh
-cp target/release/oxide /usr/local/bin/oxide
+cargo install --path .
 ```
 
 ## Usage
