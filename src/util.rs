@@ -47,10 +47,13 @@ pub fn set_master_password() -> Result<String, String> {
         }
         count += 1;
         if count == 3_u8 {
-            println!("Password did not match >>> Exiting!!!");
+            println!("{}", "Password did not match >>> Exiting!!!".red().bold());
             break;
         }
-        println!("Password did not match >>> Try again!!!")
+        println!(
+            "{}",
+            "Password did not match >>> Try again!!!".yellow().bold()
+        )
     }
     Err("maximum retries exhausted".to_string())
 }
@@ -87,16 +90,16 @@ pub fn get_list() -> Result<(), std::io::Error> {
     if let Ok((vault, _)) = verify_password() {
         show_list(&vault.entries);
     } else {
-        println!("Wrong password!!!");
-        println!("Exiting!!!!");
+        println!("{}", "Wrong password!!!".red().bold());
+        println!("{}", "Exiting!!!!".red().bold());
     }
     Ok(())
 }
 
 pub fn show_list(map: &HashMap<String, Entry>) {
-    println!("List of all accounts:::");
+    println!("{}", "List of all accounts:::".cyan().bold());
     for (k, _) in map {
-        println!("{}", k);
+        println!("{}", k.green());
     }
 }
 fn add_entry_to_map(map: &mut HashMap<String, Entry>, name: String, secret: &str, key: [u8; 32]) {
@@ -117,7 +120,10 @@ pub fn add_entry(name: String, path: Option<String>) -> Result<(), std::io::Erro
                 );
             }
             None => {
-                print!("Enter TOTP Secret for account {} : ", &name);
+                print!(
+                    "{}",
+                    format!("Enter TOTP Secret for account {} : ", &name).yellow()
+                );
                 io::stdout().flush().unwrap();
                 let mut secret = String::new();
                 io::stdin().read_line(&mut secret).unwrap();
@@ -127,16 +133,19 @@ pub fn add_entry(name: String, path: Option<String>) -> Result<(), std::io::Erro
         }
         store_vault(&vault).unwrap();
     } else {
-        println!("Wrong master password");
+        println!("{}", "Wrong master password".red().bold());
     }
     Ok(())
 }
 
 fn delete_entry_from_map(map: &mut HashMap<String, Entry>, name: String) {
     if let Some(_) = map.remove(&name) {
-        println!("Account {} deleted!!!", name);
+        println!("{}", format!("Account {} deleted!!!", name).green().bold());
     } else {
-        println!("Account {} does not exist!!!", name);
+        println!(
+            "{}",
+            format!("Account {} does not exist!!!", name).red().bold()
+        );
     }
 }
 
@@ -145,7 +154,7 @@ pub fn delete_entry(name: String) -> Result<(), std::io::Error> {
         delete_entry_from_map(&mut vault.entries, name);
         store_vault(&vault).unwrap();
     } else {
-        println!("Wrong master password");
+        println!("{}", "Wrong master password".red().bold());
     }
     Ok(())
 }
@@ -169,22 +178,33 @@ pub fn get_code(name: String, clipboard: bool) -> Result<(), std::io::Error> {
                 if clipboard {
                     copy_to_clipboard(totp).unwrap();
                     println!(
-                        "Your Secret OTP for account {} is copied to your clipboard (Expires in {}s",
-                        name, time_left
+                        "{}",
+                        format!(
+                            "Your Secret OTP for account {} is copied to your clipboard (Expires in {}s",
+                            name, time_left
+                        )
+                        .green()
                     );
                 } else {
                     println!(
-                        "Your Secret OTP for account {} is: {} (Expires in {}s)",
-                        name, totp, time_left
+                        "{}",
+                        format!(
+                            "Your Secret OTP for account {} is: {} (Expires in {}s)",
+                            name, totp, time_left
+                        )
+                        .green()
                     );
                 }
             }
             None => {
-                println!("Account {} does not exist!!!", name);
+                println!(
+                    "{}",
+                    format!("Account {} does not exist!!!", name).red().bold()
+                );
             }
         }
     } else {
-        println!("Wrong master password");
+        println!("{}", "Wrong master password".red().bold());
     }
     Ok(())
 }

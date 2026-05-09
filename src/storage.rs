@@ -1,5 +1,6 @@
 use crate::crypto;
 use crate::util::set_master_password;
+use colored::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
@@ -42,8 +43,8 @@ pub fn init_vault() {
     } else if !fs::exists(vault_file_path).expect("Cannot access the file!!") {
         init_vault_file();
     } else {
-        println!("Vault file already exists!!!");
-        println!("Cannot Init!!!");
+        println!("{}", "Vault file already exists!!!".red().bold());
+        println!("{}", "Cannot Init!!!".red().bold());
     }
 }
 
