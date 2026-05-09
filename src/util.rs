@@ -1,13 +1,31 @@
 use crate::crypto::{decrypt, derive_key, encrypt};
 use crate::storage::{Entry, Vault, get_vault_file_path};
-use crate::totp::generate_totp_code;
+use crate::totp::{extract_secret_from_qr, generate_totp_code};
 use arboard;
 use argon2::password_hash::SaltString;
+use colored::*;
 use rpassword;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{self, Write};
 use std::io::{BufReader, BufWriter};
+
+pub const BANNER: &str = r#"
+  ____  __  _____ ____  _____ 
+ / __ \ \ \/ /_ _|  _ \| ____|
+| |  | | \  / | || | | |  _|  
+| |__| | /  \ | || |_| | |___ 
+ \____/_/_/\_\___|____/|_____|
+"#;
+
+pub fn print_banner() {
+    println!(
+        "{}",
+        BANNER.custom_color(CustomColor::new(0, 255, 65)).bold()
+    );
+    println!("{}", " --- Secure TOTP Vault --- ".dimmed());
+    println!(); // Extra spacing for breathing room
+}
 
 pub fn get_password_from_user() -> String {
     let password = rpassword::prompt_password(
@@ -86,14 +104,27 @@ fn add_entry_to_map(map: &mut HashMap<String, Entry>, name: String, secret: &str
     map.insert(name, Entry { nonce, ciphertext });
 }
 
-pub fn add_entry(name: String) -> Result<(), std::io::Error> {
+pub fn add_entry(name: String, path: Option<String>) -> Result<(), std::io::Error> {
     if let Ok((mut vault, key)) = verify_password() {
-        print!("Enter TOTP Secret for account {} : ", &name);
-        io::stdout().flush().unwrap();
-        let mut secret = String::new();
-        io::stdin().read_line(&mut secret).unwrap();
-        let secret = secret.trim();
-        add_entry_to_map(&mut vault.entries, name, secret, key);
+        match path {
+            Some(path) => {
+                // QR imports store the same Base32 secret as manual entry.
+                add_entry_to_map(
+                    &mut vault.entries,
+                    name,
+                    extract_secret_from_qr(path).unwrap().as_str(),
+                    key,
+                );
+            }
+            None => {
+                print!("Enter TOTP Secret for account {} : ", &name);
+                io::stdout().flush().unwrap();
+                let mut secret = String::new();
+                io::stdin().read_line(&mut secret).unwrap();
+                let secret = secret.trim();
+                add_entry_to_map(&mut vault.entries, name, secret, key);
+            }
+        }
         store_vault(&vault).unwrap();
     } else {
         println!("Wrong master password");

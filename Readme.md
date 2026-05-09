@@ -1,5 +1,13 @@
 # Oxide
 
+<pre style="color: #00ff41; font-weight: 700;">
+  ____  __  _____ ____  _____
+ / __ \ \ \/ /_ _|  _ \| ____|
+| |  | | \  / | || | | |  _|
+| |__| | /  \ | || |_| | |___
+ \____/_/_/\_\___|____/|_____|
+</pre>
+
 Oxide is a minimal, secure TOTP vault for the terminal. It stores authenticator
 secrets locally, encrypts them at rest, and generates 6-digit time-based OTP
 codes from the command line.
@@ -12,6 +20,7 @@ codes from the command line.
 - Argon2id password-based key derivation.
 - Random salt per vault and unique nonce per encrypted value.
 - Base32 TOTP secrets with SHA-1, 6-digit codes, and 30-second periods.
+- TOTP secret import from OTPAuth QR code images.
 - Optional clipboard support for generated OTP codes.
 
 ## Supported OS
@@ -80,6 +89,15 @@ oxide add github
 Oxide asks for the master password, then prompts for the account's Base32 TOTP
 secret. The secret is encrypted before it is written to disk.
 
+Add an account from an OTPAuth QR code image:
+
+```sh
+oxide add github ./github-qr.png
+```
+
+When a QR image path is provided, Oxide reads the TOTP secret from the QR code
+instead of prompting for it.
+
 List saved accounts:
 
 ```sh
@@ -109,7 +127,7 @@ oxide delete github
 
 ```text
 oxide init
-oxide add <name>
+oxide add <name> [qr-image-path]
 oxide list
 oxide get <name> [--clipboard]
 oxide delete <name>
