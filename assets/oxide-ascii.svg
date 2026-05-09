@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="560" height="130" viewBox="0 0 560 130" role="img" aria-label="Oxide ASCII art">
+  <rect width="100%" height="100%" fill="transparent"/>
+  <text x="16" y="28" fill="#00ff41" font-family="Consolas, Monaco, 'Courier New', monospace" font-size="20" font-weight="700" xml:space="preserve">
+    <tspan x="16" dy="0">  ____  __  _____ ____  _____</tspan>
+    <tspan x="16" dy="24"> / __ \ \ \/ /_ _|  _ \| ____|</tspan>
+    <tspan x="16" dy="24">| |  | | \  / | || | | |  _|</tspan>
+    <tspan x="16" dy="24">| |__| | /  \ | || |_| | |___</tspan>
+    <tspan x="16" dy="24"> \____/_/_/\_\___|____/|_____|</tspan>
+  </text>
+</svg>

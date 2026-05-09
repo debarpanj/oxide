@@ -1,12 +1,6 @@
 # Oxide
 
-<pre style="color: #00ff41; font-weight: 700;">
-  ____  __  _____ ____  _____
- / __ \ \ \/ /_ _|  _ \| ____|
-| |  | | \  / | || | | |  _|
-| |__| | /  \ | || |_| | |___
- \____/_/_/\_\___|____/|_____|
-</pre>
+![Oxide ASCII art](assets/oxide-ascii.svg)
 
 Oxide is a minimal, secure TOTP vault for the terminal. It stores authenticator
 secrets locally, encrypts them at rest, and generates 6-digit time-based OTP
