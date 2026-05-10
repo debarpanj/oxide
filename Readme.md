@@ -86,11 +86,13 @@ secret. The secret is encrypted before it is written to disk.
 Add an account from an OTPAuth QR code image:
 
 ```sh
-oxide add github ./github-qr.png
+oxide add ./github-qr.png
 ```
 
-When a QR image path is provided, Oxide reads the TOTP secret from the QR code
-instead of prompting for it.
+When a QR image path is provided, Oxide reads the account name and TOTP secret
+from the QR code instead of prompting for the secret. If the QR code does not
+include an account name, Oxide reports the problem and exits without adding an
+entry.
 
 List saved accounts:
 
@@ -121,7 +123,7 @@ oxide delete github
 
 ```text
 oxide init
-oxide add <name> [qr-image-path]
+oxide add <account-or-qr-image>
 oxide list
 oxide get <name> [--clipboard]
 oxide delete <name>

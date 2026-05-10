@@ -1,6 +1,6 @@
 use crate::crypto::{decrypt, derive_key, encrypt};
 use crate::storage::{Entry, Vault, get_vault_file_path};
-use crate::totp::{extract_secret_from_qr, generate_totp_code};
+use crate::totp::{QrTotp, extract_totp_from_qr, generate_totp_code};
 use arboard;
 use argon2::password_hash::SaltString;
 use colored::*;
@@ -9,6 +9,7 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::io::{self, Write};
 use std::io::{BufReader, BufWriter};
+use std::path::Path;
 
 pub const BANNER: &str = r#"
   ____  __  _____ ____  _____ 
@@ -107,29 +108,70 @@ fn add_entry_to_map(map: &mut HashMap<String, Entry>, name: String, secret: &str
     map.insert(name, Entry { nonce, ciphertext });
 }
 
-pub fn add_entry(name: String, path: Option<String>) -> Result<(), std::io::Error> {
+fn looks_like_image_path(value: &str) -> bool {
+    let path = Path::new(value);
+    path.extension()
+        .and_then(|extension| extension.to_str())
+        .map(|extension| {
+            matches!(
+                extension.to_ascii_lowercase().as_str(),
+                "png" | "jpg" | "jpeg" | "webp" | "bmp" | "gif" | "tif" | "tiff"
+            )
+        })
+        .unwrap_or(false)
+}
+
+fn account_name_from_qr(qr_totp: &QrTotp) -> Result<String, String> {
+    let account_name = qr_totp.account_name.trim();
+    if !account_name.is_empty() {
+        return Ok(account_name.to_string());
+    }
+
+    Err("QR code did not include an account name. No account was added.".to_string())
+}
+
+fn add_qr_entry(
+    map: &mut HashMap<String, Entry>,
+    path: String,
+    key: [u8; 32],
+) -> Result<(), String> {
+    let qr_totp = extract_totp_from_qr(path)?;
+    let issuer = qr_totp.issuer.clone();
+    let name = account_name_from_qr(&qr_totp)?;
+
+    add_entry_to_map(map, name.clone(), &qr_totp.secret, key);
+
+    if let Some(issuer) = issuer {
+        println!(
+            "{}",
+            format!("Imported account {} from {}", name, issuer)
+                .green()
+                .bold()
+        );
+    } else {
+        println!("{}", format!("Imported account {}", name).green().bold());
+    }
+
+    Ok(())
+}
+
+pub fn add_entry(account_or_path: String) -> Result<(), std::io::Error> {
     if let Ok((mut vault, key)) = verify_password() {
-        match path {
-            Some(path) => {
-                // QR imports store the same Base32 secret as manual entry.
-                add_entry_to_map(
-                    &mut vault.entries,
-                    name,
-                    extract_secret_from_qr(path).unwrap().as_str(),
-                    key,
-                );
+        if looks_like_image_path(&account_or_path) {
+            if let Err(error) = add_qr_entry(&mut vault.entries, account_or_path, key) {
+                println!("{}", error.red().bold());
+                return Ok(());
             }
-            None => {
-                print!(
-                    "{}",
-                    format!("Enter TOTP Secret for account {} : ", &name).yellow()
-                );
-                io::stdout().flush().unwrap();
-                let mut secret = String::new();
-                io::stdin().read_line(&mut secret).unwrap();
-                let secret = secret.trim();
-                add_entry_to_map(&mut vault.entries, name, secret, key);
-            }
+        } else {
+            print!(
+                "{}",
+                format!("Enter TOTP Secret for account {} : ", &account_or_path).yellow()
+            );
+            io::stdout().flush().unwrap();
+            let mut secret = String::new();
+            io::stdin().read_line(&mut secret).unwrap();
+            let secret = secret.trim();
+            add_entry_to_map(&mut vault.entries, account_or_path, secret, key);
         }
         store_vault(&vault).unwrap();
     } else {

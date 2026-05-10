@@ -13,8 +13,8 @@ fn main() {
             util::print_banner();
             storage::init_vault();
         }
-        Commands::Add { name, path } => {
-            let _ = util::add_entry(name, path);
+        Commands::Add { name } => {
+            let _ = util::add_entry(name);
         }
         Commands::List => {
             let _ = util::get_list();
