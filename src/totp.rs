@@ -16,7 +16,7 @@ pub fn generate_totp_code(secret: String) -> Result<(String, u64), String> {
     let totp = TOTP::new_unchecked(Algorithm::SHA1, 6, 1, 30, secret, None, "".to_string());
     let seconds_since_epoch = SystemTime::now()
         .duration_since(UNIX_EPOCH)
-        .unwrap()
+        .map_err(|e| format!("System time is before UNIX epoch: {}", e))?
         .as_secs();
     let time_left = 30 - (seconds_since_epoch % 30);
 
