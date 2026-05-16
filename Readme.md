@@ -9,7 +9,7 @@ codes from the command line.
 ## Features
 
 - Rust CLI built with `clap`.
-- Local encrypted vault stored at `~/.oxide/vault.json`.
+- Local encrypted SQLite vault stored at `~/.oxide/vault.db`.
 - AES-256-GCM authenticated encryption for vault entries.
 - Argon2id password-based key derivation.
 - Random salt per vault and unique nonce per encrypted value.
@@ -27,8 +27,8 @@ Oxide is intended to run anywhere Rust and its dependencies are available:
 
 The vault is stored in the user's home directory:
 
-- macOS/Linux: `~/.oxide/vault.json`
-- Windows: `%USERPROFILE%\.oxide\vault.json`
+- macOS/Linux: `~/.oxide/vault.db`
+- Windows: `%USERPROFILE%\.oxide\vault.db`
 
 Clipboard support depends on the host OS clipboard APIs.
 
@@ -71,8 +71,9 @@ Initialize a new vault:
 oxide init
 ```
 
-This creates `~/.oxide/vault.json`, prompts for a master password twice, derives
-an encryption key, and writes an empty encrypted vault.
+This creates `~/.oxide/vault.db`, initializes the SQLite tables, prompts for a
+master password twice, derives an encryption key, and stores an encrypted
+verification value.
 
 Add an account:
 
@@ -129,29 +130,30 @@ oxide get <name> [--clipboard]
 oxide delete <name>
 ```
 
-## Vault Format
+## Vault Storage
 
-The vault is JSON and currently uses this high-level structure:
+The vault is a local SQLite database with two tables:
 
-```json
-{
-  "version": "1.0.0",
-  "salt": "<argon2 salt>",
-  "verification": {
-    "nonce": "<base64 nonce>",
-    "ciphertext": "<base64 ciphertext>"
-  },
-  "entries": {
-    "<account-name>": {
-      "nonce": "<base64 nonce>",
-      "ciphertext": "<base64 encrypted totp secret>"
-    }
-  }
-}
+```sql
+CREATE TABLE vault_metadata (
+  id INTEGER PRIMARY KEY CHECK (id = 1),
+  version TEXT NOT NULL,
+  salt TEXT NOT NULL,
+  nonce TEXT NOT NULL,
+  ciphertext TEXT NOT NULL
+);
+
+CREATE TABLE entries (
+  name TEXT PRIMARY KEY,
+  nonce TEXT NOT NULL,
+  ciphertext TEXT NOT NULL
+);
 ```
 
-Account names are stored in plaintext so they can be listed. TOTP secrets are
-encrypted with a key derived from the master password.
+`vault_metadata` stores the vault version, Argon2 salt, and encrypted
+verification value. `entries` stores one row per account. Account names are
+stored in plaintext so they can be listed. TOTP secrets are encrypted with a key
+derived from the master password before they are inserted into SQLite.
 
 ## Security Notes
 
@@ -159,7 +161,7 @@ encrypted with a key derived from the master password.
 - A verification value is encrypted during initialization and used to check
   whether the entered master password can decrypt the vault.
 - Losing the master password means the saved TOTP secrets cannot be recovered.
-- Keep backups of `~/.oxide/vault.json` if you rely on the vault.
+- Keep backups of `~/.oxide/vault.db` if you rely on the vault.
 
 ## Development
 

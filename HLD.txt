@@ -4,7 +4,7 @@ Oxide High-Level Design
 Oxide is a Rust CLI application for storing TOTP secrets locally and generating
 OTP codes from the terminal. The vault is stored at:
 
-  ~/.oxide/vault.json
+  ~/.oxide/vault.db
 
 
 Architecture
@@ -35,7 +35,7 @@ Architecture
 +-------------------+            +-------------------+
 |    Vault Layer    |            |     TOTP Layer    |
 |  src/storage.rs   |            |   src/totp.rs     |
-|  JSON storage     |            | Code generation   |
+| SQLite storage    |            | Code generation   |
 +---------+---------+            +-------------------+
           |
           v
@@ -51,14 +51,15 @@ Command Flow
 
 init:
   - Creates the vault directory if needed.
+  - Initializes the SQLite vault database and tables.
   - Prompts for the master password twice.
   - Generates a random Argon2 salt.
   - Stores an encrypted verification value.
-  - Writes an empty vault file.
 
-add <name>:
+add <account-or-qr-image>:
   - Verifies the master password.
-  - Prompts for the account's Base32 TOTP secret.
+  - Prompts for the account's Base32 TOTP secret, or reads account name and
+    secret from an OTPAuth QR image.
   - Encrypts the secret with AES-256-GCM.
   - Stores the encrypted entry in the vault.
 
@@ -97,23 +98,22 @@ TOTP generation:
   - Period: 30 seconds
 
 
-Vault Structure
----------------
+Vault Storage
+-------------
 
-{
-  "version": "1.0.0",
-  "salt": "...",
-  "verification": {
-    "nonce": "...",
-    "ciphertext": "..."
-  },
-  "entries": {
-    "github": {
-      "nonce": "...",
-      "ciphertext": "..."
-    }
-  }
-}
+The vault is a local SQLite database with two tables:
+
+vault_metadata:
+  - id: fixed single row id (1)
+  - version: vault schema/application version
+  - salt: Argon2 salt
+  - nonce: AES-GCM nonce for the verification value
+  - ciphertext: encrypted verification value
+
+entries:
+  - name: plaintext account name, primary key
+  - nonce: AES-GCM nonce for the encrypted TOTP secret
+  - ciphertext: encrypted TOTP secret
 
 
 Security Notes
